@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JARVIS Voice Assistant</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+    <h1>Welcome to JARVIS Voice Assistant</h1>
+    <p id="greeting">{{ greeting }}</p>
+
+    <input type="text" id="query" placeholder="Enter your command here..." style="width: 300px; padding: 10px;">
+    <button id="submit" style="padding: 10px 20px; margin-left: 10px;">Submit</button>
+    <button id="voice" style="padding: 10px 20px; margin-left: 10px;">🎤 Speak</button>
+
+    <p id="response" style="margin-top: 20px;"></p>
+
+    <script>
+        $(document).ready(function () {
+            // Handle text input
+            $('#submit').click(function () {
+                const query = $('#query').val();
+                if (query.trim() !== "") {
+                    sendCommand(query);
+                } else {
+                    $('#response').text("Please enter a command.");
+                }
+            });
+
+            // Voice recognition using Web Speech API
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+
+            $('#voice').click(function () {
+                recognition.start();
+            });
+
+            recognition.onstart = function () {
+                $('#response').text("Listening...");
+            };
+
+            recognition.onspeechend = function () {
+                recognition.stop();
+            };
+
+            recognition.onresult = function (event) {
+                const query = event.results[0][0].transcript;
+                $('#query').val(query); // Set the recognized text in the input field
+                sendCommand(query); // Send the recognized command to the server
+            };
+
+            recognition.onerror = function (event) {
+                $('#response').text("Voice recognition error: " + event.error);
+            };
+
+            // Send command to Flask server
+            function sendCommand(query) {
+                $.ajax({
+                    url: '/process',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ query: query }),
+                    success: function (data) {
+                        $('#response').text(data.response);
+                    },
+                    error: function () {
+                        $('#response').text("Error processing the command.");
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
