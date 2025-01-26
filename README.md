@@ -2,6 +2,8 @@ python -m venv .env
 
 .env\Scripts\activate
 
-pip install requirement.txt
+pip install -r requirement.txt
 
 python app.py
+
+deactivate
